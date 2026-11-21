@@ -46,7 +46,7 @@ public class CashierForm : Form
         var hint = new Label
         {
             Dock = DockStyle.Fill, ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleLeft,
-            Text = "F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | + / - Qty | Del Hapus | 3*barcode = jumlah 3"
+            Text = "F7 Laporan | F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | + / - Qty | Del Hapus"
         };
 
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
@@ -72,7 +72,10 @@ public class CashierForm : Form
     {
         switch (e.KeyCode)
         {
-            case Keys.F8: Pay(); e.Handled = true; break;
+        	case Keys.F7:
+                using (var rp = new ReportForm()) rp.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
+        	case Keys.F8: Pay(); e.Handled = true; break;
             case Keys.F9: ClearCart(); e.Handled = true; break;
             case Keys.F10:
                 using (var f = new ProductForm()) f.ShowDialog(this);
