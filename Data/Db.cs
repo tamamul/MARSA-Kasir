@@ -34,7 +34,24 @@ CREATE TABLE IF NOT EXISTS products (
   unit       TEXT NOT NULL DEFAULT 'pcs',
   active     INTEGER NOT NULL DEFAULT 1
 );
-CREATE INDEX IF NOT EXISTS ix_products_name ON products(name);";
+CREATE INDEX IF NOT EXISTS ix_products_name ON products(name);
+CREATE TABLE IF NOT EXISTS sales (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at    TEXT NOT NULL,
+  total         INTEGER NOT NULL,
+  paid          INTEGER NOT NULL,
+  change_amount INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sale_items (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  sale_id    INTEGER NOT NULL REFERENCES sales(id),
+  product_id INTEGER NOT NULL,
+  name       TEXT NOT NULL,
+  qty        INTEGER NOT NULL,
+  sell_price INTEGER NOT NULL,
+  buy_price  INTEGER NOT NULL
+);
+";
         cmd.ExecuteNonQuery();
     }
 }
