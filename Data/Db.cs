@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS sale_items (
   sell_price INTEGER NOT NULL,
   buy_price  INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 ";
         cmd.ExecuteNonQuery();
     }
