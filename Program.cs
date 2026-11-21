@@ -1,4 +1,6 @@
 using MarsaKasir.Data;
-Db.Init();    
+using MarsaKasir.Forms;
+
+Db.Init();
 ApplicationConfiguration.Initialize();
-Application.Run(new Form { Text = "MARSA KASIR", WindowState = FormWindowState.Maximized });
+Application.Run(new ProductForm());
