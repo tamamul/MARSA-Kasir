@@ -181,10 +181,10 @@ public class CashierForm : Form
         if (cart.Count == 0) return;
         long total = cart.Sum(x => x.Subtotal);
         using var f = new PaymentForm(total);
-        if (f.ShowDialog(this) != DialogResult.OK) { txtBarcode.Focus(); return; 
-        if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); }
-
+        if (f.ShowDialog(this) != DialogResult.OK) { txtBarcode.Focus(); return; }
+        
         var id = SaleRepository.Save(cart, total, f.Paid);
+        if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); 
         MessageBox.Show("Kembalian: " + Fmt.Rp(f.Paid - total), $"Transaksi #{id} selesai");
         cart.Clear();
         UpdateTotal();
