@@ -46,4 +46,47 @@ public static class SaleRepository
         tx.Commit();
         return saleId;
     }
+    
+      public static Sale? Get(long id)
+    {
+        using var c = Db.Open();
+        Sale? s = null;
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT id,created_at,total,paid,change_amount FROM sales WHERE id=$id";
+            cmd.Parameters.AddWithValue("$id", id);
+            using var r = cmd.ExecuteReader();
+            if (r.Read())
+                s = new Sale
+                {
+                    Id = r.GetInt64(0), CreatedAt = DateTime.Parse(r.GetString(1)),
+                    Total = r.GetInt64(2), Paid = r.GetInt64(3), Change = r.GetInt64(4)
+                };
+        }
+        if (s == null) return null;
+        using var ic = c.CreateCommand();
+        ic.CommandText = "SELECT name,qty,sell_price FROM sale_items WHERE sale_id=$id ORDER BY id";
+        ic.Parameters.AddWithValue("$id", id);
+        using var ir = ic.ExecuteReader();
+        while (ir.Read())
+            s.Items.Add(new SaleLine { Name = ir.GetString(0), Qty = ir.GetInt32(1), SellPrice = ir.GetInt64(2) });
+        return s;
+    }
+
+    public static List<Sale> Recent(int limit = 100)
+    {
+        var list = new List<Sale>();
+        using var c = Db.Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT id,created_at,total,paid,change_amount FROM sales ORDER BY id DESC LIMIT $l";
+        cmd.Parameters.AddWithValue("$l", limit);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            list.Add(new Sale
+            {
+                Id = r.GetInt64(0), CreatedAt = DateTime.Parse(r.GetString(1)),
+                Total = r.GetInt64(2), Paid = r.GetInt64(3), Change = r.GetInt64(4)
+            });
+        return list;
+    }  
 }
