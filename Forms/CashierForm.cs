@@ -46,7 +46,7 @@ public class CashierForm : Form
         var hint = new Label
         {
             Dock = DockStyle.Fill, ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleLeft,
-            Text = "F8 Bayar  |  F9 Kosongkan  |  F10 Produk  |  + / - Qty  |  Del Hapus baris  |  3*barcode = jumlah 3"
+            Text = "F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | + / - Qty | Del Hapus | 3*barcode = jumlah 3"
         };
 
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
@@ -76,6 +76,12 @@ public class CashierForm : Form
             case Keys.F9: ClearCart(); e.Handled = true; break;
             case Keys.F10:
                 using (var f = new ProductForm()) f.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
+                            case Keys.F11:
+                using (var h = new SalesHistoryForm()) h.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
+            case Keys.F12:
+                using (var st = new SettingsForm()) st.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
             case Keys.Add: ChangeQty(+1); e.SuppressKeyPress = true; break;
             case Keys.Subtract: ChangeQty(-1); e.SuppressKeyPress = true; break;
@@ -176,6 +182,7 @@ public class CashierForm : Form
         long total = cart.Sum(x => x.Subtotal);
         using var f = new PaymentForm(total);
         if (f.ShowDialog(this) != DialogResult.OK) { txtBarcode.Focus(); return; }
+        if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id);
 
         var id = SaleRepository.Save(cart, total, f.Paid);
         MessageBox.Show("Kembalian: " + Fmt.Rp(f.Paid - total), $"Transaksi #{id} selesai");
