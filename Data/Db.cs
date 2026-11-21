@@ -55,6 +55,21 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS users (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  salt     TEXT NOT NULL,
+  hash     TEXT NOT NULL,
+  role     TEXT NOT NULL DEFAULT 'kasir',
+  active   INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS activity_log (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL,
+  username   TEXT NOT NULL,
+  action     TEXT NOT NULL,
+  detail     TEXT NOT NULL DEFAULT ''
+);
 ";
         cmd.ExecuteNonQuery();
     }
