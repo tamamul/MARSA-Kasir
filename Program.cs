@@ -3,4 +3,4 @@ using MarsaKasir.Forms;
 
 Db.Init();
 ApplicationConfiguration.Initialize();
-Application.Run(new ProductForm());
+Application.Run(new CashierForm());   // sebelumnya: new ProductForm()
