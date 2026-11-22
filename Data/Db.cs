@@ -18,6 +18,8 @@ public static class Db
         return c;
     }
 
+    public static string DbPath => Path.Combine(Folder, "kasir.db");
+
     public static void Init()
     {
         using var c = Open();
