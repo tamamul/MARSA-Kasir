@@ -2,7 +2,7 @@ using MarsaKasir.Data;
 using MarsaKasir.Helpers;
 namespace MarsaKasir.Forms;
 
-public class LoginForm : Form
+public class LoginForm : BaseForm
 {
     readonly TextBox txtUser = new() { Dock = DockStyle.Fill };
     readonly TextBox txtPass = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true };
