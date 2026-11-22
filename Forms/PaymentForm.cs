@@ -1,7 +1,7 @@
 using MarsaKasir.Helpers;
 namespace MarsaKasir.Forms;
 
-public class PaymentForm : Form
+public class PaymentForm : BaseForm
 {
     public long Paid { get; private set; }
     readonly long total;
