@@ -3,7 +3,7 @@ namespace MarsaKasir.Data;
 
 public static class SaleRepository
 {
-    public static long Save(IEnumerable<CartItem> items, long total, long paid)
+    public static long Save(IEnumerable<CartItem> items, long total, long paid, long? customerId = null)
     {
         using var c = Db.Open();
         using var tx = c.BeginTransaction();
