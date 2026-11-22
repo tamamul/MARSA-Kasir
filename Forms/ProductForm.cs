@@ -1,3 +1,4 @@
+using MarsaKasir.Helpers;
 using Microsoft.Data.Sqlite;
 using MarsaKasir.Data;
 using MarsaKasir.Models;
@@ -32,6 +33,17 @@ public class ProductForm : BaseForm
         Col("Stok", "Stock", 70);
         Col("Min", "MinStock", 60);
         Col("Satuan", "Unit", 70);
+        
+        foreach (DataGridViewColumn c in grid.Columns)
+            if (c.HeaderText is "Harga Beli" or "Harga Jual" or "Stok" or "Min")
+                c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+        // stok di bawah / sama dengan minimum tampil merah
+        grid.CellFormatting += (_, e) =>
+        {
+            if (e.RowIndex >= 0 && grid.Rows[e.RowIndex].DataBoundItem is Product p && p.Stock <= p.MinStock)
+                e.CellStyle.ForeColor = Theme.Danger;
+        };
 
         var btnAdd = new Button { Text = "Tambah", Width = 90 };
         var btnEdit = new Button { Text = "Ubah", Width = 90 };
