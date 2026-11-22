@@ -20,6 +20,8 @@ public static class Theme
             {
                 case DataGridView g: StyleGrid(g); break;
                 case Button b: StyleButton(b); break;
+                case DataGridView g when g.Tag as string != "keep": StyleGrid(g); break;
+                case Button b when b.Tag as string != "keep": StyleButton(b); break;
             }
             Apply(c);
         }
