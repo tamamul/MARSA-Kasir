@@ -3,6 +3,7 @@ using MarsaKasir.Forms;
 
 Db.Init();
 UserRepository.EnsureDefaultAdmin();
+BackupService.Auto();
 ApplicationConfiguration.Initialize();
 
 while (true)
@@ -14,3 +15,4 @@ while (true)
     Application.Run(cashier);
     if (!cashier.LoggedOut) break;   // ditutup lewat tombol X = keluar aplikasi
 }
+BackupService.Auto(); 
