@@ -4,7 +4,7 @@ using MarsaKasir.Helpers;
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class UserForm : Form
+public class UserForm : BaseForm
 {
     readonly DataGridView grid = new()
     {
