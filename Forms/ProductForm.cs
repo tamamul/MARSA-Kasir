@@ -3,7 +3,7 @@ using MarsaKasir.Data;
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class ProductForm : Form
+public class ProductForm : BaseForm
 {
     readonly TextBox txtSearch = new() { PlaceholderText = "Cari nama / barcode...", Dock = DockStyle.Fill };
     readonly DataGridView grid = new()
