@@ -72,6 +72,7 @@ public class CashierForm : BaseForm
         Key("F2 Cari Produk", Keys.F2);
         Key("F3 Buka Laci", Keys.F3);
         Key("F1 Backup", Keys.F1, true);
+        Key("Ctrl+K Kasbon", Keys.Control | Keys.K);
         
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -150,6 +151,9 @@ public class CashierForm : BaseForm
             case Keys.F1 when Session.IsAdmin:
                 using (var bk = new BackupForm()) bk.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
+            case Keys.K when e.Control:
+                using (var kb = new KasbonForm()) kb.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; e.SuppressKeyPress = true; break;
         }
     }
 
@@ -253,15 +257,18 @@ public class CashierForm : BaseForm
         using var f = new PaymentForm(total);
         if (f.ShowDialog(this) != DialogResult.OK) { txtBarcode.Focus(); return; }
         
-        var id = SaleRepository.Save(cart, total, f.Paid);
-        ActivityLog.Write("Transaksi", $"#{id} total {Fmt.Rp(total)}");
-        if (SettingsRepository.Get("drawer_auto", "0") == "1") CashDrawer.TryOpen();
+        var id = SaleRepository.Save(cart, total, f.Paid, f.CustomerId);
+        ActivityLog.Write("Transaksi", $"#{id} total {Fmt.Rp(total)}"
+            + (f.CustomerId != null ? $" (kasbon {Fmt.Rp(total - f.Paid)})" : ""));
+        if (f.Paid > 0 && SettingsRepository.Get("drawer_auto", "0") == "1") CashDrawer.TryOpen();
         if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); 
         cart.Clear();
         UpdateTotal();
         lblStatus.Font = DoneFont;
         lblStatus.ForeColor = Theme.Success;
-        lblStatus.Text = $"Transaksi #{id} selesai  |  Kembalian: {Fmt.Rp(f.Paid - total)}";
+        lblStatus.Text = f.CustomerId != null
+            ? $"Transaksi #{id} selesai  |  Masuk kasbon: {Fmt.Rp(total - f.Paid)}"
+            : $"Transaksi #{id} selesai  |  Kembalian: {Fmt.Rp(f.Paid - total)}";
         txtBarcode.Focus();
     }
     void Logout()
