@@ -4,7 +4,7 @@ using MarsaKasir.Helpers;
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class SettingsForm : Form
+public class SettingsForm : BaseForm
 {
     readonly TextBox txtName = new() { Dock = DockStyle.Fill };
     readonly TextBox txtAddr = new() { Dock = DockStyle.Fill, Multiline = true, Height = 60 };
