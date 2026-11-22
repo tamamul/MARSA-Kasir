@@ -5,7 +5,7 @@ using MarsaKasir.Helpers;
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class CashierForm : Form
+public class CashierForm : BaseForm
 {
     readonly BindingList<CartItem> cart = new();
     readonly TextBox txtBarcode = new()
