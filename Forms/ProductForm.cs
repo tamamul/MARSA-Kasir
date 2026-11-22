@@ -62,9 +62,10 @@ public class ProductForm : Form
 
     void Edit(Product p)
     {
+        var isNew = p.Id == 0;
         using var f = new ProductEditForm(p);
         if (f.ShowDialog(this) != DialogResult.OK) return;
-        try { ProductRepository.Save(p); }
+        try { ProductRepository.Save(p); ActivityLog.Write(isNew ? "Tambah produk" : "Ubah produk", $"{p.Name} ({p.Barcode})"); }
         catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
         {
             MessageBox.Show("Barcode sudah dipakai produk lain.");
@@ -77,6 +78,7 @@ public class ProductForm : Form
         if (Current is not { } p) return;
         if (MessageBox.Show($"Hapus \"{p.Name}\"?", "Konfirmasi", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
         ProductRepository.Deactivate(p.Id);
+        ActivityLog.Write("Hapus produk", p.Name);
         Reload();
     }
 }
