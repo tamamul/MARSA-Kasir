@@ -1,7 +1,7 @@
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class ProductEditForm : Form
+public class ProductEditForm : BaseForm
 {
     readonly Product p;
     readonly TextBox txtBarcode = new() { Dock = DockStyle.Fill };
