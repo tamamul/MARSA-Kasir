@@ -40,7 +40,7 @@ public class CashierForm : BaseForm
         grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "No", Width = 50 });
         grid.CellFormatting += (_, e) =>
         {
-            if (e.ColumnIndex == 0) { e.Value = e.RowIndex + 1; e.FormattingApplied = true; }
+            if (e.ColumnIndex == 0) { e.Value = (e.RowIndex + 1).ToString(); e.FormattingApplied = true; }
         };
         Col("Nama", "Name", 300, fill: true);
         Col("Harga", "SellPrice", 140);
