@@ -24,7 +24,9 @@ public class PaymentForm : BaseForm
         };
 
         var quick = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, FlowDirection = FlowDirection.RightToLeft };
-        foreach (var (label, value) in new[] { ("100.000", 100000L), ("50.000", 50000L), ("Uang pas", total) })
+        var options = new List<(string, long)> { ("Uang pas", total) };
+        options.AddRange(Suggest(total).Select(v => (Fmt.Num(v), v)));
+        foreach (var (label, value) in options)
         {
             var b = new Button { Text = label, Width = 90, TabStop = false };
             b.Click += (_, _) => { txtPaid.Text = value.ToString(); txtPaid.Focus(); };
@@ -66,4 +68,10 @@ public class PaymentForm : BaseForm
         Paid = paid;
         DialogResult = DialogResult.OK;
     }
+    // Pembulatan ke atas ke pecahan uang yang umum: total 23.500 -> 25.000, 30.000, 50.000
+    static IEnumerable<long> Suggest(long total) =>
+        new long[] { 5000, 10000, 20000, 50000, 100000 }
+            .Select(d => (total + d - 1) / d * d)
+            .Where(v => v > total)
+            .Distinct().OrderBy(v => v).Take(3);
 }
