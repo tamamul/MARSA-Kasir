@@ -13,6 +13,7 @@ public class ReportForm : BaseForm
         TextAlign = ContentAlignment.MiddleLeft
     };
     readonly DataGridView gridPeriod = MakeGrid(), gridTop = MakeGrid(), gridLow = MakeGrid();
+    readonly TabControl tabs = new() { Dock = DockStyle.Fill };
 
     static DataGridView MakeGrid() => new()
     {
@@ -68,9 +69,10 @@ public class ReportForm : BaseForm
         bar.Controls.Add(dtFrom);
         bar.Controls.Add(new Label { Text = "Sampai", AutoSize = true, Margin = new Padding(3, 8, 3, 0) });
         bar.Controls.Add(dtTo);
-        bar.Controls.AddRange(new Control[] { btnToday, btnMonth, cmbGroup, btnShow });
-
-        var tabs = new TabControl { Dock = DockStyle.Fill };
+        var btnCsv = new Button { Text = "Ekspor CSV", AutoSize = true };
+        btnCsv.Click += (_, _) => ExportCsv();
+        bar.Controls.AddRange(new Control[] { btnToday, btnMonth, cmbGroup, btnShow, btnCsv });
+        
         void Tab(string title, Control c)
         {
             var p = new TabPage(title);
@@ -101,6 +103,25 @@ public class ReportForm : BaseForm
             Reload();
         };
         Shown += (_, _) => Reload();
+    }
+
+    void ExportCsv()
+    {
+        var grid = tabs.SelectedIndex switch { 1 => gridTop, 2 => gridLow, _ => gridPeriod };
+        var name = (tabs.SelectedTab?.Text ?? "laporan").Replace(" ", "-");
+        using var dlg = new SaveFileDialog
+        {
+            Filter = "CSV (Excel)|*.csv",
+            FileName = $"laporan-{name}-{DateTime.Now:yyyyMMdd}.csv"
+        };
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            CsvExport.Save(grid, dlg.FileName);
+            ActivityLog.Write("Ekspor laporan", Path.GetFileName(dlg.FileName));
+            MessageBox.Show("Tersimpan: " + dlg.FileName);
+        }
+        catch (Exception ex) { MessageBox.Show("Gagal menyimpan: " + ex.Message); }
     }
 
     void Reload()
