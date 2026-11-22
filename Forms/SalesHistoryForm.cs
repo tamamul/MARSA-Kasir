@@ -3,7 +3,7 @@ using MarsaKasir.Helpers;
 using MarsaKasir.Models;
 namespace MarsaKasir.Forms;
 
-public class SalesHistoryForm : Form
+public class SalesHistoryForm : BaseForm
 {
     readonly DataGridView grid = new()
     {
