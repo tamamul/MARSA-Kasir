@@ -37,6 +37,11 @@ public class CashierForm : BaseForm
             if (prop != "Name" && prop != "Qty") c.DefaultCellStyle.Format = "N0";
             grid.Columns.Add(c);
         }
+        grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "No", Width = 50 });
+        grid.CellFormatting += (_, e) =>
+        {
+            if (e.ColumnIndex == 0) { e.Value = e.RowIndex + 1; e.FormattingApplied = true; }
+        };
         Col("Nama", "Name", 300, fill: true);
         Col("Harga", "SellPrice", 140);
         Col("Qty", "Qty", 80);
@@ -64,6 +69,8 @@ public class CashierForm : BaseForm
         Key("F6 Pengguna", Keys.F6, true);
         Key("F5 Log", Keys.F5, true);
         Key("F4 Ganti user", Keys.F4);
+        Key("F2 Cari Produk", Keys.F2);
+        Key("F3 Buka Laci", Keys.F3);
         
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -75,6 +82,29 @@ public class CashierForm : BaseForm
         root.Controls.Add(bottom, 0, 2);
         root.Controls.Add(hint, 0, 3);
         Controls.Add(root);
+
+        var header = new Panel { Dock = DockStyle.Top, Height = 48, BackColor = Theme.Primary };
+        var lblStore = new Label
+        {
+            Text = SettingsRepository.Get("store_name", "MARSA KASIR"), Dock = DockStyle.Left, Width = 520,
+            ForeColor = Color.White, Font = new Font("Segoe UI", 15, FontStyle.Bold),
+            TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(12, 0, 0, 0)
+        };
+        var lblClock = new Label
+        {
+            Dock = DockStyle.Right, Width = 400, ForeColor = Color.White, Font = new Font("Segoe UI", 11),
+            TextAlign = ContentAlignment.MiddleRight, Padding = new Padding(0, 0, 12, 0)
+        };
+        void Tick() => lblClock.Text =
+            $"{Session.Current?.Username} ({Session.Current?.Role})   {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+        var clock = new System.Windows.Forms.Timer { Interval = 1000 };
+        clock.Tick += (_, _) => Tick();
+        Tick();
+        clock.Start();
+        FormClosed += (_, _) => clock.Stop();
+        header.Controls.Add(lblClock);
+        header.Controls.Add(lblStore);
+        Controls.Add(header);
 
         txtBarcode.KeyDown += (_, e) =>
         {
@@ -102,6 +132,8 @@ public class CashierForm : BaseForm
             case Keys.F12 when Session.IsAdmin:
             using (var st = new SettingsForm()) st.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
+            case Keys.F2: OpenPicker(); e.Handled = true; break;
+            case Keys.F3: OpenDrawerManual(); e.Handled = true; break;
             case Keys.F4: Logout(); e.Handled = true; break;
             case Keys.F5 when Session.IsAdmin:
                 using (var lg = new ActivityLogForm()) lg.ShowDialog(this);
@@ -135,6 +167,12 @@ public class CashierForm : BaseForm
         {
             var found = ProductRepository.Search(text);
             if (found.Count == 1) p = found[0];
+            else if (found.Count > 1)
+            {
+                using var pk = new ProductPickerForm(text);   // banyak hasil: kasir memilih
+                if (pk.ShowDialog(this) == DialogResult.OK) p = pk.Selected;
+                if (p == null) { txtBarcode.Clear(); txtBarcode.Focus(); return; }
+            }
         }
         if (p == null)
         {
@@ -213,6 +251,7 @@ public class CashierForm : BaseForm
         
         var id = SaleRepository.Save(cart, total, f.Paid);
         ActivityLog.Write("Transaksi", $"#{id} total {Fmt.Rp(total)}");
+        if (SettingsRepository.Get("drawer_auto", "0") == "1") CashDrawer.TryOpen();
         if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); 
         cart.Clear();
         UpdateTotal();
@@ -236,5 +275,21 @@ public class CashierForm : BaseForm
         lblStatus.Font = StatusFont;
         lblStatus.ForeColor = error ? Theme.Danger : Theme.Ink;
         lblStatus.Text = text;
+    }
+    void OpenPicker()
+    {
+        using var pk = new ProductPickerForm();
+        if (pk.ShowDialog(this) == DialogResult.OK && pk.Selected is { } p)
+        {
+            AddProduct(p, 1);
+            Status($"{p.Name}  x1");
+        }
+        txtBarcode.Focus();
+    }
+
+    void OpenDrawerManual()
+    {
+        CashDrawer.TryOpen();
+        ActivityLog.Write("Buka laci manual");   // tercatat di log (F5)
     }
 }
