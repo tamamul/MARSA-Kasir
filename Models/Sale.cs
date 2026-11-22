@@ -16,4 +16,6 @@ public class Sale
     public long Paid { get; set; }
     public long Change { get; set; }
     public List<SaleLine> Items { get; set; } = new();
+    public long Credit { get; set; }
+    public string Customer { get; set; } = "";
 }
