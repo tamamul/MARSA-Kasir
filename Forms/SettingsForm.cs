@@ -12,6 +12,8 @@ public class SettingsForm : BaseForm
     readonly ComboBox cmbPaper = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly ComboBox cmbPrinter = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly CheckBox chkAuto = new() { Text = "Cetak struk otomatis setelah bayar", AutoSize = true };
+    readonly CheckBox chkDrawer = new() { Text = "Buka laci kasir otomatis setelah bayar", AutoSize = true };
+    readonly ComboBox cmbPin = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
 
     public SettingsForm()
     {
@@ -19,7 +21,7 @@ public class SettingsForm : BaseForm
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
-        ClientSize = new Size(480, 380);
+        ClientSize = new Size(480, 450);
 
         cmbPaper.Items.AddRange(new object[] { "58 mm", "80 mm" });
         cmbPrinter.Items.Add("(Printer default Windows)");
@@ -32,6 +34,9 @@ public class SettingsForm : BaseForm
         var saved = SettingsRepository.Get("printer");
         cmbPrinter.SelectedIndex = Math.Max(0, cmbPrinter.Items.IndexOf(saved));
         chkAuto.Checked = SettingsRepository.Get("auto_print", "0") == "1";
+        cmbPin.Items.AddRange(new object[] { "Pin 2 (umum)", "Pin 5" });
+        cmbPin.SelectedIndex = SettingsRepository.Get("drawer_pin", "0") == "1" ? 1 : 0;
+        chkDrawer.Checked = SettingsRepository.Get("drawer_auto", "0") == "1";
 
         var t = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(12) };
         t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
@@ -48,6 +53,9 @@ public class SettingsForm : BaseForm
         Row("Printer", cmbPrinter);
         t.Controls.Add(chkAuto);
         t.SetColumnSpan(chkAuto, 2);
+        t.Controls.Add(chkDrawer);
+        t.SetColumnSpan(chkDrawer, 2);
+        Row("Pin laci", cmbPin);
 
         var btnSave = new Button { Text = "Simpan", Width = 90 };
         var btnTest = new Button { Text = "Tes cetak", Width = 90 };
@@ -56,8 +64,9 @@ public class SettingsForm : BaseForm
         btnTest.Click += (_, _) => { Save(); TestPrint(); };
         var bar = new FlowLayoutPanel
             { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, Height = 44, Padding = new Padding(8) };
-        bar.Controls.AddRange(new Control[] { btnCancel, btnSave, btnTest });
-
+        var btnDrawer = new Button { Text = "Tes laci", Width = 90 };
+        btnDrawer.Click += (_, _) => { Save(); CashDrawer.TryOpen(); };
+        bar.Controls.AddRange(new Control[] { btnCancel, btnSave, btnTest, btnDrawer });
         Controls.Add(t);
         Controls.Add(bar);
         CancelButton = btnCancel;
@@ -72,6 +81,8 @@ public class SettingsForm : BaseForm
         SettingsRepository.Set("printer", cmbPrinter.SelectedIndex <= 0 ? "" : cmbPrinter.Text);
         SettingsRepository.Set("auto_print", chkAuto.Checked ? "1" : "0");
         ActivityLog.Write("Ubah pengaturan");
+        SettingsRepository.Set("drawer_auto", chkDrawer.Checked ? "1" : "0");
+        SettingsRepository.Set("drawer_pin", cmbPin.SelectedIndex == 1 ? "1" : "0");
     }
 
     static void TestPrint()
