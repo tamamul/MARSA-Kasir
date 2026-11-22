@@ -2,7 +2,7 @@ using MarsaKasir.Data;
 using MarsaKasir.Helpers;
 namespace MarsaKasir.Forms;
 
-public class ReportForm : Form
+public class ReportForm : BaseForm
 {
     readonly DateTimePicker dtFrom = new() { Format = DateTimePickerFormat.Short, Width = 110 };
     readonly DateTimePicker dtTo = new() { Format = DateTimePickerFormat.Short, Width = 110 };
