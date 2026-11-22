@@ -21,11 +21,14 @@ public class CashierForm : BaseForm
     readonly Label lblStatus = new() { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 12) };
 
     public bool LoggedOut { get; private set; }
+    static readonly Font StatusFont = new("Segoe UI", 12);
+    static readonly Font DoneFont = new("Segoe UI", 18, FontStyle.Bold);
     public CashierForm()
     {
         Text = $"MARSA KASIR - {Session.Current?.Username} ({Session.Current?.Role})";
         WindowState = FormWindowState.Maximized;
         KeyPreview = true;
+        lblTotal.ForeColor = Theme.Success;
 
         void Col(string title, string prop, int w, bool fill = false)
         {
@@ -44,16 +47,29 @@ public class CashierForm : BaseForm
         bottom.Controls.Add(lblStatus);   // Fill ditambah dulu
         bottom.Controls.Add(lblTotal);
 
-        var hint = new Label
+        var hint = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(4, 3, 4, 3) };
+        void Key(string label, Keys key, bool adminOnly = false)
         {
-            Dock = DockStyle.Fill, ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleLeft,
-            Text = "F4 Ganti user | F7 Laporan | F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | F5 Log | F6 Pengguna"        };
-
+            if (adminOnly && !Session.IsAdmin) return;   // kasir tidak melihat tombol admin
+            var b = new Button { Text = label, AutoSize = true, TabStop = false };
+            b.Click += (_, _) => { OnKey(null, new KeyEventArgs(key)); txtBarcode.Focus(); };
+            hint.Controls.Add(b);
+        }
+        Key("F8 Bayar", Keys.F8);
+        Key("F9 Kosongkan", Keys.F9);
+        Key("F11 Riwayat", Keys.F11);
+        Key("F10 Produk", Keys.F10, true);
+        Key("F7 Laporan", Keys.F7, true);
+        Key("F12 Pengaturan", Keys.F12, true);
+        Key("F6 Pengguna", Keys.F6, true);
+        Key("F5 Log", Keys.F5, true);
+        Key("F4 Ganti user", Keys.F4);
+        
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
         root.Controls.Add(txtBarcode, 0, 0);
         root.Controls.Add(grid, 0, 1);
         root.Controls.Add(bottom, 0, 2);
@@ -122,14 +138,14 @@ public class CashierForm : BaseForm
         }
         if (p == null)
         {
-            lblStatus.Text = $"Tidak ditemukan / terlalu banyak hasil: {text}";
+            Status($"Tidak ditemukan / terlalu banyak hasil: {text}", error: true);
             SystemSounds.Beep.Play();
             txtBarcode.SelectAll();
             return;
         }
 
         AddProduct(p, qty);
-        lblStatus.Text = p.Name;
+        Status($"{p.Name}  x{qty}");
         txtBarcode.Clear();
     }
 
@@ -198,10 +214,11 @@ public class CashierForm : BaseForm
         var id = SaleRepository.Save(cart, total, f.Paid);
         ActivityLog.Write("Transaksi", $"#{id} total {Fmt.Rp(total)}");
         if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); 
-        MessageBox.Show("Kembalian: " + Fmt.Rp(f.Paid - total), $"Transaksi #{id} selesai");
         cart.Clear();
         UpdateTotal();
-        lblStatus.Text = $"Transaksi #{id} tersimpan";
+        lblStatus.Font = DoneFont;
+        lblStatus.ForeColor = Theme.Success;
+        lblStatus.Text = $"Transaksi #{id} selesai  |  Kembalian: {Fmt.Rp(f.Paid - total)}";
         txtBarcode.Focus();
     }
     void Logout()
@@ -213,5 +230,11 @@ public class CashierForm : BaseForm
         ActivityLog.Write("Logout");
         LoggedOut = true;
         Close();
+    }
+    void Status(string text, bool error = false)
+    {
+        lblStatus.Font = StatusFont;
+        lblStatus.ForeColor = error ? Theme.Danger : Theme.Ink;
+        lblStatus.Text = text;
     }
 }
