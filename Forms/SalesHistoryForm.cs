@@ -43,6 +43,10 @@ public class SalesHistoryForm : Form
 
     void PrintCurrent()
     {
-        if (grid.CurrentRow?.DataBoundItem is Sale s) ReceiptPrinter.TryPrint(s.Id);
+        if (grid.CurrentRow?.DataBoundItem is Sale s)
+        {
+            ReceiptPrinter.TryPrint(s.Id);
+            ActivityLog.Write("Cetak ulang struk", $"#{s.Id}");
+        }
     }
 }
