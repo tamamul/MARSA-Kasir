@@ -74,7 +74,12 @@ public static class ReceiptPrinter
         Line();
         LR("TOTAL", Fmt.Num(s.Total));
         LR("Bayar", Fmt.Num(s.Paid));
-        LR("Kembali", Fmt.Num(s.Change));
+        if (s.Credit > 0)
+        {
+            LR("Kasbon", Fmt.Num(s.Credit));
+            foreach (var w in Wrap("a.n. " + s.Customer, cols)) lines.Add(w);
+        }
+        else LR("Kembali", Fmt.Num(s.Change));
         Line();
         Center(SettingsRepository.Get("footer", "Terima kasih"));
         lines.Add(""); lines.Add(""); lines.Add("");
