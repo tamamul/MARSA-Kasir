@@ -71,6 +71,7 @@ public class CashierForm : BaseForm
         Key("F4 Ganti user", Keys.F4);
         Key("F2 Cari Produk", Keys.F2);
         Key("F3 Buka Laci", Keys.F3);
+        Key("F1 Backup", Keys.F1, true);
         
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -146,6 +147,9 @@ public class CashierForm : BaseForm
             case Keys.Up: SelectRow((grid.CurrentRow?.Index ?? 0) - 1); e.Handled = true; break;
             case Keys.Down: SelectRow((grid.CurrentRow?.Index ?? 0) + 1); e.Handled = true; break;
             case Keys.Delete when txtBarcode.Text == "": RemoveRow(); e.Handled = true; break;
+            case Keys.F1 when Session.IsAdmin:
+                using (var bk = new BackupForm()) bk.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
         }
     }
 
