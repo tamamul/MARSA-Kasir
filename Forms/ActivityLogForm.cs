@@ -1,7 +1,7 @@
 using MarsaKasir.Data;
 namespace MarsaKasir.Forms;
 
-public class ActivityLogForm : Form
+public class ActivityLogForm : BaseForm
 {
     public ActivityLogForm()
     {
