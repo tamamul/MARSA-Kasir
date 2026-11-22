@@ -72,7 +72,33 @@ CREATE TABLE IF NOT EXISTS activity_log (
   action     TEXT NOT NULL,
   detail     TEXT NOT NULL DEFAULT ''
 );
+CREATE TABLE IF NOT EXISTS customers (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  name         TEXT NOT NULL,
+  note         TEXT NOT NULL DEFAULT '',
+  credit_limit INTEGER NOT NULL DEFAULT 0,
+  active       INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS debt_payments (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
+  created_at  TEXT NOT NULL,
+  amount      INTEGER NOT NULL,
+  note        TEXT NOT NULL DEFAULT '',
+  username    TEXT NOT NULL DEFAULT ''
+);
 ";
         cmd.ExecuteNonQuery();
+        AddColumn(c, "sales", "customer_id", "INTEGER");
+        AddColumn(c, "sales", "credit_amount", "INTEGER NOT NULL DEFAULT 0");
+    }
+    static void AddColumn(SqliteConnection c, string table, string column, string type)
+    {
+        using var q = c.CreateCommand();
+        q.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name='{column}'";
+        if ((long)q.ExecuteScalar()! > 0) return;
+        using var a = c.CreateCommand();
+        a.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {type}";
+        a.ExecuteNonQuery();
     }
 }
