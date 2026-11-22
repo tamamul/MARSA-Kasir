@@ -20,9 +20,10 @@ public class CashierForm : Form
         { Dock = DockStyle.Right, Width = 460, Font = new Font("Segoe UI", 28, FontStyle.Bold), TextAlign = ContentAlignment.MiddleRight };
     readonly Label lblStatus = new() { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 12) };
 
+    public bool LoggedOut { get; private set; }
     public CashierForm()
     {
-        Text = "MARSA KASIR";
+        Text = $"MARSA KASIR - {Session.Current?.Username} ({Session.Current?.Role})";
         WindowState = FormWindowState.Maximized;
         KeyPreview = true;
 
@@ -46,8 +47,7 @@ public class CashierForm : Form
         var hint = new Label
         {
             Dock = DockStyle.Fill, ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleLeft,
-            Text = "F7 Laporan | F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | + / - Qty | Del Hapus"
-        };
+            Text = "F4 Ganti user | F7 Laporan | F8 Bayar | F9 Kosongkan | F10 Produk | F11 Riwayat | F12 Pengaturan | F5 Log | F6 Pengguna"        };
 
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -72,19 +72,26 @@ public class CashierForm : Form
     {
         switch (e.KeyCode)
         {
-        	case Keys.F7:
+            case Keys.F7 when Session.IsAdmin:
                 using (var rp = new ReportForm()) rp.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
         	case Keys.F8: Pay(); e.Handled = true; break;
             case Keys.F9: ClearCart(); e.Handled = true; break;
-            case Keys.F10:
+            case Keys.F10 when Session.IsAdmin:
                 using (var f = new ProductForm()) f.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
                             case Keys.F11:
                 using (var h = new SalesHistoryForm()) h.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
-            case Keys.F12:
-                using (var st = new SettingsForm()) st.ShowDialog(this);
+            case Keys.F12 when Session.IsAdmin:
+            using (var st = new SettingsForm()) st.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
+            case Keys.F4: Logout(); e.Handled = true; break;
+            case Keys.F5 when Session.IsAdmin:
+                using (var lg = new ActivityLogForm()) lg.ShowDialog(this);
+                txtBarcode.Focus(); e.Handled = true; break;
+            case Keys.F6 when Session.IsAdmin:
+                using (var us = new UserForm()) us.ShowDialog(this);
                 txtBarcode.Focus(); e.Handled = true; break;
             case Keys.Add: ChangeQty(+1); e.SuppressKeyPress = true; break;
             case Keys.Subtract: ChangeQty(-1); e.SuppressKeyPress = true; break;
@@ -157,6 +164,7 @@ public class CashierForm : Form
     {
         var idx = grid.CurrentRow?.Index ?? -1;
         if (idx < 0) return;
+        ActivityLog.Write("Hapus baris", $"{cart[idx].Name} x{cart[idx].Qty}");
         cart.RemoveAt(idx);
         UpdateTotal();
         SelectRow(Math.Min(idx, cart.Count - 1));
@@ -174,6 +182,7 @@ public class CashierForm : Form
     {
         if (cart.Count == 0) return;
         if (MessageBox.Show("Kosongkan keranjang?", "Konfirmasi", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+        ActivityLog.Write("Kosongkan keranjang", $"{cart.Count} baris, {Fmt.Rp(cart.Sum(x => x.Subtotal))}");
         cart.Clear();
         UpdateTotal();
         txtBarcode.Focus();
@@ -187,11 +196,22 @@ public class CashierForm : Form
         if (f.ShowDialog(this) != DialogResult.OK) { txtBarcode.Focus(); return; }
         
         var id = SaleRepository.Save(cart, total, f.Paid);
+        ActivityLog.Write("Transaksi", $"#{id} total {Fmt.Rp(total)}");
         if (SettingsRepository.Get("auto_print", "0") == "1") ReceiptPrinter.TryPrint(id); 
         MessageBox.Show("Kembalian: " + Fmt.Rp(f.Paid - total), $"Transaksi #{id} selesai");
         cart.Clear();
         UpdateTotal();
         lblStatus.Text = $"Transaksi #{id} tersimpan";
         txtBarcode.Focus();
+    }
+    void Logout()
+    {
+        var msg = cart.Count > 0
+            ? "Keranjang yang belum dibayar akan hilang. Ganti user?"
+            : "Ganti user / keluar akun?";
+        if (MessageBox.Show(msg, "Konfirmasi", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+        ActivityLog.Write("Logout");
+        LoggedOut = true;
+        Close();
     }
 }
