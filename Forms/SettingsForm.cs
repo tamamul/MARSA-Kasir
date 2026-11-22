@@ -71,6 +71,7 @@ public class SettingsForm : Form
         SettingsRepository.Set("paper", cmbPaper.SelectedIndex == 1 ? "80" : "58");
         SettingsRepository.Set("printer", cmbPrinter.SelectedIndex <= 0 ? "" : cmbPrinter.Text);
         SettingsRepository.Set("auto_print", chkAuto.Checked ? "1" : "0");
+        ActivityLog.Write("Ubah pengaturan");
     }
 
     static void TestPrint()
