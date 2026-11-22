@@ -12,12 +12,14 @@ public static class SaleRepository
         using (var cmd = c.CreateCommand())
         {
             cmd.Transaction = tx;
-            cmd.CommandText = @"INSERT INTO sales(created_at,total,paid,change_amount)
-                VALUES($t,$tot,$p,$ch); SELECT last_insert_rowid();";
+            cmd.CommandText = @"INSERT INTO sales(created_at,total,paid,change_amount,customer_id,credit_amount)
+                VALUES($t,$tot,$p,$ch,$cid,$cr); SELECT last_insert_rowid();";
             cmd.Parameters.AddWithValue("$t", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("$tot", total);
             cmd.Parameters.AddWithValue("$p", paid);
-            cmd.Parameters.AddWithValue("$ch", paid - total);
+            cmd.Parameters.AddWithValue("$ch", Math.Max(0, paid - total));
+            cmd.Parameters.AddWithValue("$cid", (object?)customerId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$cr", customerId != null ? Math.Max(0, total - paid) : 0L);
             saleId = (long)cmd.ExecuteScalar()!;
         }
 
@@ -53,14 +55,17 @@ public static class SaleRepository
         Sale? s = null;
         using (var cmd = c.CreateCommand())
         {
-            cmd.CommandText = "SELECT id,created_at,total,paid,change_amount FROM sales WHERE id=$id";
+            cmd.CommandText = @"SELECT s.id,s.created_at,s.total,s.paid,s.change_amount,
+                    s.credit_amount, COALESCE(c.name,'')
+                FROM sales s LEFT JOIN customers c ON c.id=s.customer_id WHERE s.id=$id";
             cmd.Parameters.AddWithValue("$id", id);
             using var r = cmd.ExecuteReader();
             if (r.Read())
                 s = new Sale
                 {
                     Id = r.GetInt64(0), CreatedAt = DateTime.Parse(r.GetString(1)),
-                    Total = r.GetInt64(2), Paid = r.GetInt64(3), Change = r.GetInt64(4)
+                    Total = r.GetInt64(2), Paid = r.GetInt64(3), Change = r.GetInt64(4),
+                    Credit = r.GetInt64(5), Customer = r.GetString(6)
                 };
         }
         if (s == null) return null;
